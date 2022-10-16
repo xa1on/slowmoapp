@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 //ffmpeg
 import 'package:ffmpeg_kit_flutter/abstract_session.dart';
@@ -70,18 +72,9 @@ class MainPage extends StatefulWidget {
 
 var inputPath;
 Map inputInfo = {};
-var thumbnailBytes;
+var thumbnail;
 
 class _MainPageState extends State<MainPage> {
-  _getThumbnail() async {
-    thumbnailBytes = await VideoThumbnail.thumbnailData(
-      video: inputPath,
-      imageFormat: ImageFormat.JPEG,
-      maxWidth: 128,
-      quality: 25,
-    );
-  }
-
   _pickFile() async {
     FilePickerResult? result =
         await FilePicker.platform.pickFiles(type: FileType.video);
@@ -91,6 +84,10 @@ class _MainPageState extends State<MainPage> {
         (session) async {
           final information = await session.getMediaInformation();
           if (information != null) {
+            thumbnail = await VideoThumbnail.thumbnailFile(
+                video: inputPath,
+                thumbnailPath: (await getTemporaryDirectory()).path,
+                imageFormat: ImageFormat.JPEG);
             var frameRateString =
                 information.getAllProperties()?["streams"][0]["r_frame_rate"];
             var frameRateBuffer = frameRateString.split('/');
@@ -99,7 +96,6 @@ class _MainPageState extends State<MainPage> {
             inputInfo["duration"] = information.getDuration();
             inputInfo["name"] = result.files.single.name;
             inputInfo["bitrate"] = information.getBitrate();
-            _getThumbnail();
             setState(() {});
           } else {
             print("Invalid file");
@@ -204,7 +200,8 @@ class _VideoInfoState extends State<VideoInfo> {
             children: <Widget>[
               Expanded(
                 flex: 2,
-                child: Image.memory(thumbnailBytes),
+                child: Image.file(File(thumbnail),
+                    fit: BoxFit.fitWidth, width: 200, height: 113),
               ),
               Expanded(
                 flex: 3,
