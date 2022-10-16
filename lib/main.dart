@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 //ffmpeg
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
@@ -138,6 +139,8 @@ class _MainPageState extends State<MainPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           var status = await Permission.manageExternalStorage.request();
+          await Permission.notification.request();
+          await Permission.accessNotificationPolicy.request();
           _pickFile(context);
         },
         child: const Icon(Icons.add_a_photo_rounded),
@@ -287,6 +290,12 @@ class _VideoInfoState extends State<VideoInfo> {
           child: ToggleSpeedChange(),
         ),
         Divider(height: 50),
+        ElevatedButton(
+            onPressed: () async {
+              var downloadsdir = '/storage/emulated/0/Download';
+              OpenFilex.open(downloadsdir);
+            },
+            child: Text("Open download directory")),
       ],
     );
   }
@@ -349,8 +358,9 @@ class _RenderButtonState extends State<RenderButton> {
   Widget build(BuildContext context) {
     return ElevatedButton(
         onPressed: () async {
+          //${((await getExternalStorageDirectories(type: StorageDirectory.downloads))?.first.path)}/${inputInfo["name"]}
           var downloadsdir =
-              '${((await getExternalStorageDirectories(type: StorageDirectory.downloads))?.first.path)}/${inputInfo["name"]}_new.mp4';
+              '/storage/emulated/0/Download/${(inputInfo["name"].split('.'))[0]}_new.mp4';
           FFmpegKit.executeAsync(
               '-i ${inputPath} -filter "minterpolate=\'fps=${inputInfo["framerate"] / _speedvalue}\',setpts=${1 / _speedvalue}*PTS" -an ${downloadsdir}',
               (Session session) async {
