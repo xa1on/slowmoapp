@@ -75,7 +75,7 @@ Map inputInfo = {};
 var thumbnail;
 
 class _MainPageState extends State<MainPage> {
-  _pickFile() async {
+  _pickFile(context) async {
     FilePickerResult? result =
         await FilePicker.platform.pickFiles(type: FileType.video);
     if (result != null) {
@@ -104,7 +104,11 @@ class _MainPageState extends State<MainPage> {
             inputInfo["bitrate"] = information.getBitrate();
             setState(() {});
           } else {
-            print("Invalid file");
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('File Invalid, Try again.'),
+              ),
+            );
           }
         },
       );
@@ -152,13 +156,13 @@ class _MainPageState extends State<MainPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _pickFile();
+          _pickFile(context);
         },
         child: const Icon(Icons.add_a_photo_rounded),
       ),
-      body: inputInfo["framerate"] == null
-          ? const EmptyPage()
-          : const VideoInfo(),
+      body: inputInfo["framerate"] == null ? const EmptyPage() : VideoInfo(),
+      bottomNavigationBar:
+          inputInfo["framerate"] != null ? const RenderButton() : null,
     );
   }
 }
@@ -221,7 +225,7 @@ class _VideoInfoState extends State<VideoInfo> {
                       Text(
                         inputInfo["name"],
                         style: const TextStyle(
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.bold,
                           fontSize: 14.0,
                         ),
                       ),
@@ -251,13 +255,18 @@ class _VideoInfoState extends State<VideoInfo> {
         const Card(
           child: ListTile(
             leading: Icon(Icons.add_a_photo_rounded),
-            title: Text('Video Info'),
+            title: Text(
+              'Video Info',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             subtitle: Text('Technical video stuff'),
           ),
         ),
         Card(
           child: ListTile(
-            title: Text('Framerate: ${inputInfo["framerate"]} FPS"'),
+            title: Text('Framerate: ${inputInfo["framerate"]} FPS'),
             dense: true,
           ),
         ),
@@ -267,7 +276,88 @@ class _VideoInfoState extends State<VideoInfo> {
             dense: true,
           ),
         ),
+        const Card(
+          child: ListTile(
+            leading: Icon(Icons.edit),
+            title: Text(
+              'Video Properties Editor',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        Card(
+          child: ListTile(
+            title: Text('Timescale: '),
+          ),
+        ),
+        Card(
+          child: TimescaleSlider(),
+        ),
+        Card(
+          child: ToggleSpeedChange(),
+        ),
+        Divider(height: 50),
       ],
     );
+  }
+}
+
+class TimescaleSlider extends StatefulWidget {
+  const TimescaleSlider({super.key});
+
+  @override
+  State<TimescaleSlider> createState() => _TimescaleSliderState();
+}
+
+class _TimescaleSliderState extends State<TimescaleSlider> {
+  double _speedvalue = 1;
+  @override
+  Widget build(BuildContext context) {
+    return Slider(
+      value: _speedvalue,
+      min: 0.1,
+      max: 2,
+      divisions: 19,
+      label: 'x${((_speedvalue * 10).round() / 10)}',
+      onChanged: (double value) {
+        setState(() {
+          _speedvalue = value;
+        });
+      },
+    );
+  }
+}
+
+class ToggleSpeedChange extends StatefulWidget {
+  const ToggleSpeedChange({super.key});
+
+  @override
+  State<ToggleSpeedChange> createState() => _ToggleSpeedChangeState();
+}
+
+class _ToggleSpeedChangeState extends State<ToggleSpeedChange> {
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      title: Text("Speed up video based off timescale"),
+      value: true,
+      onChanged: (value) {},
+    );
+  }
+}
+
+class RenderButton extends StatefulWidget {
+  const RenderButton({super.key});
+
+  @override
+  State<RenderButton> createState() => _RenderButtonState();
+}
+
+class _RenderButtonState extends State<RenderButton> {
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(onPressed: () {}, child: const Text("Render"));
   }
 }
