@@ -91,8 +91,14 @@ class _MainPageState extends State<MainPage> {
             var frameRateString =
                 information.getAllProperties()?["streams"][0]["r_frame_rate"];
             var frameRateBuffer = frameRateString.split('/');
-            inputInfo["framerate"] = double.parse(frameRateBuffer[0]) /
-                double.parse(frameRateBuffer[1]);
+            if (frameRateBuffer[0] != '0') {
+              inputInfo["framerate"] = double.parse(frameRateBuffer[0]) /
+                  double.parse(frameRateBuffer[1]);
+            } else {
+              inputInfo["framerate"] = double.parse(
+                  information.getAllProperties()?["format"]["tags"]
+                      ["com.android.capture.fps"]);
+            }
             inputInfo["duration"] = information.getDuration();
             inputInfo["name"] = result.files.single.name;
             inputInfo["bitrate"] = information.getBitrate();
@@ -150,7 +156,9 @@ class _MainPageState extends State<MainPage> {
         },
         child: const Icon(Icons.add_a_photo_rounded),
       ),
-      body: inputInfo["framerate"] == null ? EmptyPage() : VideoInfo(),
+      body: inputInfo["framerate"] == null
+          ? const EmptyPage()
+          : const VideoInfo(),
     );
   }
 }
@@ -226,10 +234,7 @@ class _VideoInfoState extends State<VideoInfo> {
                       const Padding(
                           padding: EdgeInsets.symmetric(vertical: 1.0)),
                       Text(
-                        (((double.parse(inputInfo["duration"]) * 100).round()) /
-                                    100)
-                                .toString() +
-                            ' seconds',
+                        '${((double.parse(inputInfo["duration"]) * 100).round()) / 100} seconds',
                         style: const TextStyle(fontSize: 10.0),
                       ),
                     ],
@@ -243,7 +248,7 @@ class _VideoInfoState extends State<VideoInfo> {
             ],
           ),
         ),
-        Card(
+        const Card(
           child: ListTile(
             leading: Icon(Icons.add_a_photo_rounded),
             title: Text('Video Info'),
@@ -252,14 +257,13 @@ class _VideoInfoState extends State<VideoInfo> {
         ),
         Card(
           child: ListTile(
-            title: Text(
-                'Framerate: ' + inputInfo["framerate"].toString() + " FPS"),
+            title: Text('Framerate: ${inputInfo["framerate"]} FPS"'),
             dense: true,
           ),
         ),
         Card(
           child: ListTile(
-            title: Text('Bitrate: ' + inputInfo["bitrate"] + " bps"),
+            title: Text('Bitrate: ${inputInfo["bitrate"]} bps'),
             dense: true,
           ),
         ),
