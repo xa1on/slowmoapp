@@ -9,33 +9,55 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SlowMo App',
-      theme: ThemeData.dark(),
-      home: const MyHomePage(title: 'SlowMo App'),
+      title: '',
+      theme: ThemeData(
+        primarySwatch: Colors.red,
+        primaryColor: Colors.black,
+        indicatorColor: const Color(0xff0E1D36),
+        hintColor: const Color(0xff280C0B),
+        highlightColor: const Color(0xff372901),
+        hoverColor: const Color(0xff3A3A3B),
+        focusColor: const Color(0xff0B2512),
+        disabledColor: Colors.grey,
+        cardColor: const Color(0xFF151515),
+        canvasColor: Colors.black,
+        brightness: Brightness.dark,
+        appBarTheme: const AppBarTheme(
+          elevation: 0.0,
+        ),
+      ),
+      home: const MainPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
+
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainPage> createState() => _MainPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  void _action() {}
+class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        leading: Builder(builder: (BuildContext context) {
+          return IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+          );
+        }),
+        title: const Text('Sloth'),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _action,
-        tooltip: 'Add',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        onPressed: () {},
+        child: const Icon(Icons.add_a_photo_rounded),
+      ),
     );
   }
 }
