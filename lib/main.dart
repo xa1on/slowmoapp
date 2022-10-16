@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const SlothApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SlothApp extends StatelessWidget {
+  const SlothApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -39,63 +40,84 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  void _fetchVideo() async {
+    final PermissionState requestPerms =
+        await PhotoManager.requestPermissionExtend();
+    if (requestPerms.isAuth) {
+      print("Granted");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: Builder(builder: (BuildContext context) {
-          return IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-          );
-        }),
-        title: const Text('Sloth'),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: const EdgeInsets.all(0),
-          children: <Widget>[
-            const DrawerHeader(
-              decoration: BoxDecoration(),
-              margin: EdgeInsets.all(0),
-              padding: EdgeInsets.all(0),
-              child: UserAccountsDrawerHeader(
-                accountName: Text("Chenghao Li"),
-                accountEmail: Text("chenghaoli36@gmail.com"),
+        appBar: AppBar(
+          leading: Builder(builder: (BuildContext context) {
+            return IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+            );
+          }),
+          title: const Text('Sloth'),
+        ),
+        drawer: Drawer(
+          child: ListView(
+            padding: const EdgeInsets.all(0),
+            children: <Widget>[
+              const DrawerHeader(
+                decoration: BoxDecoration(),
+                margin: EdgeInsets.all(0),
+                padding: EdgeInsets.all(0),
+                child: UserAccountsDrawerHeader(
+                  accountName: Text("Chenghao Li"),
+                  accountEmail: Text("chenghaoli36@gmail.com"),
+                ),
               ),
-            ),
-            ListTile(
-              title: const Text('Home'),
-              onTap: () {},
-            ),
-            ListTile(
-              title: const Text('Settings'),
-              onTap: () {},
-            ),
-          ],
+              ListTile(
+                title: const Text('Home'),
+                onTap: () {},
+              ),
+              ListTile(
+                title: const Text('Settings'),
+                onTap: () {},
+              ),
+            ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: const Icon(Icons.add_a_photo_rounded),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const <Widget>[
-            Icon(
-              size: 75,
-              Icons.add_a_photo_rounded,
-            ),
-            Divider(
-              height: 20,
-            ),
-            Text('Press the Add Video Button to get started!'),
-          ],
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            _fetchVideo();
+          },
+          child: const Icon(Icons.add_a_photo_rounded),
         ),
+        body: const PageContents());
+  }
+}
+
+class PageContents extends StatefulWidget {
+  const PageContents({super.key});
+
+  @override
+  State<PageContents> createState() => _PageContentsState();
+}
+
+class _PageContentsState extends State<PageContents> {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const <Widget>[
+          Icon(
+            size: 60,
+            Icons.add_a_photo_rounded,
+          ),
+          Divider(height: 20, color: Colors.black),
+          Text('Press the Add Video Button to get started!'),
+        ],
       ),
     );
   }
