@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 //ffmpeg
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
@@ -292,8 +291,8 @@ class _VideoInfoState extends State<VideoInfo> {
         Divider(height: 50),
         ElevatedButton(
             onPressed: () async {
-              var downloadsdir = '/storage/emulated/0/Download';
-              OpenFilex.open(downloadsdir);
+              var downloadsdir;
+              OpenFilex.open('/storage/emulated/0/Download');
             },
             child: Text("Open download directory")),
       ],
