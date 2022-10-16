@@ -82,6 +82,21 @@ class _MainPageState extends State<MainPage> {
         onPressed: () {},
         child: const Icon(Icons.add_a_photo_rounded),
       ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const <Widget>[
+            Icon(
+              size: 75,
+              Icons.add_a_photo_rounded,
+            ),
+            Divider(
+              height: 20,
+            ),
+            Text('Press the Add Video Button to get started!'),
+          ],
+        ),
+      ),
     );
   }
 }
