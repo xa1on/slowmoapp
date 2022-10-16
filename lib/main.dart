@@ -4,12 +4,14 @@ import 'package:video_thumbnail/video_thumbnail.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:open_file/open_file.dart';
+import 'package:open_filex/open_filex.dart';
 
 //ffmpeg
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter/ffprobe_kit.dart';
+import 'package:ffmpeg_kit_flutter/log.dart';
 import 'package:ffmpeg_kit_flutter/return_code.dart';
+import 'package:ffmpeg_kit_flutter/session.dart';
 
 void main() {
   runApp(const SlothApp());
@@ -347,22 +349,33 @@ class _RenderButtonState extends State<RenderButton> {
   Widget build(BuildContext context) {
     return ElevatedButton(
         onPressed: () async {
-          print((await getExternalStorageDirectories(
-                  type: StorageDirectory.downloads))
-              ?.first
-              .path);
-          FFmpegKit.execute(
-                  '-i ${inputPath} -filter "minterpolate=\'fps=120\',setpts=4*PTS" -an ${(await getExternalStorageDirectories(type: StorageDirectory.downloads))?.first.path}/${inputPath}_new.mp4')
-              .then((session) async {
-            print("started");
+          var downloadsdir =
+              '${((await getExternalStorageDirectories(type: StorageDirectory.downloads))?.first.path)}/${inputInfo["name"]}_new.mp4';
+          FFmpegKit.executeAsync(
+              '-i ${inputPath} -filter "minterpolate=\'fps=${inputInfo["framerate"] / _speedvalue}\',setpts=${1 / _speedvalue}*PTS" -an ${downloadsdir}',
+              (Session session) async {
             final returnCode = await session.getReturnCode();
-            final logs = await session.getAllLogs();
-            logs.forEach((element) {
-              print(element.getMessage());
-            });
             if (ReturnCode.isSuccess(returnCode)) {
-
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Rendering Complete!'),
+                  action: SnackBarAction(
+                    label: 'Action',
+                    onPressed: () {
+                      OpenFilex.open(downloadsdir);
+                    },
+                  ),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('File Invalid, Try again.'),
+                ),
+              );
             }
+          }, (Log log) {
+            print(log.getMessage());
           });
         },
         child: const Text("Render"));
