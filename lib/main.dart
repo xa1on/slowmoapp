@@ -3,34 +3,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:open_file/open_file.dart';
 
 //ffmpeg
-import 'package:ffmpeg_kit_flutter/abstract_session.dart';
-import 'package:ffmpeg_kit_flutter/arch_detect.dart';
-import 'package:ffmpeg_kit_flutter/chapter.dart';
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit_config.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_session.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_session_complete_callback.dart';
 import 'package:ffmpeg_kit_flutter/ffprobe_kit.dart';
-import 'package:ffmpeg_kit_flutter/ffprobe_session.dart';
-import 'package:ffmpeg_kit_flutter/ffprobe_session_complete_callback.dart';
-import 'package:ffmpeg_kit_flutter/level.dart';
-import 'package:ffmpeg_kit_flutter/log.dart';
-import 'package:ffmpeg_kit_flutter/log_callback.dart';
-import 'package:ffmpeg_kit_flutter/log_redirection_strategy.dart';
-import 'package:ffmpeg_kit_flutter/media_information.dart';
-import 'package:ffmpeg_kit_flutter/media_information_json_parser.dart';
-import 'package:ffmpeg_kit_flutter/media_information_session.dart';
-import 'package:ffmpeg_kit_flutter/media_information_session_complete_callback.dart';
-import 'package:ffmpeg_kit_flutter/packages.dart';
 import 'package:ffmpeg_kit_flutter/return_code.dart';
-import 'package:ffmpeg_kit_flutter/session.dart';
-import 'package:ffmpeg_kit_flutter/session_state.dart';
-import 'package:ffmpeg_kit_flutter/signal.dart';
-import 'package:ffmpeg_kit_flutter/statistics.dart';
-import 'package:ffmpeg_kit_flutter/statistics_callback.dart';
-import 'package:ffmpeg_kit_flutter/stream_information.dart';
 
 void main() {
   runApp(const SlothApp());
@@ -155,7 +134,8 @@ class _MainPageState extends State<MainPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
+          var status = await Permission.manageExternalStorage.request();
           _pickFile(context);
         },
         child: const Icon(Icons.add_a_photo_rounded),
@@ -205,6 +185,9 @@ class _VideoInfoState extends State<VideoInfo> {
   Widget build(BuildContext context) {
     return ListView(
       children: [
+        Divider(
+          height: 10,
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 5.0),
           child: Row(
@@ -251,6 +234,9 @@ class _VideoInfoState extends State<VideoInfo> {
               ),
             ],
           ),
+        ),
+        Divider(
+          height: 20,
         ),
         const Card(
           child: ListTile(
@@ -311,8 +297,9 @@ class TimescaleSlider extends StatefulWidget {
   State<TimescaleSlider> createState() => _TimescaleSliderState();
 }
 
+double _speedvalue = 1;
+
 class _TimescaleSliderState extends State<TimescaleSlider> {
-  double _speedvalue = 1;
   @override
   Widget build(BuildContext context) {
     return Slider(
@@ -358,6 +345,26 @@ class RenderButton extends StatefulWidget {
 class _RenderButtonState extends State<RenderButton> {
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(onPressed: () {}, child: const Text("Render"));
+    return ElevatedButton(
+        onPressed: () async {
+          print((await getExternalStorageDirectories(
+                  type: StorageDirectory.downloads))
+              ?.first
+              .path);
+          FFmpegKit.execute(
+                  '-i ${inputPath} -filter "minterpolate=\'fps=120\',setpts=4*PTS" -an ${(await getExternalStorageDirectories(type: StorageDirectory.downloads))?.first.path}/${inputPath}_new.mp4')
+              .then((session) async {
+            print("started");
+            final returnCode = await session.getReturnCode();
+            final logs = await session.getAllLogs();
+            logs.forEach((element) {
+              print(element.getMessage());
+            });
+            if (ReturnCode.isSuccess(returnCode)) {
+
+            }
+          });
+        },
+        child: const Text("Render"));
   }
 }
