@@ -54,6 +54,30 @@ class _MainPageState extends State<MainPage> {
         }),
         title: const Text('Sloth'),
       ),
+      drawer: Drawer(
+        child: ListView(
+          padding: const EdgeInsets.all(0),
+          children: <Widget>[
+            const DrawerHeader(
+              decoration: BoxDecoration(),
+              margin: EdgeInsets.all(0),
+              padding: EdgeInsets.all(0),
+              child: UserAccountsDrawerHeader(
+                accountName: Text("Chenghao Li"),
+                accountEmail: Text("chenghaoli36@gmail.com"),
+              ),
+            ),
+            ListTile(
+              title: const Text('Home'),
+              onTap: () {},
+            ),
+            ListTile(
+              title: const Text('Settings'),
+              onTap: () {},
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
         child: const Icon(Icons.add_a_photo_rounded),
