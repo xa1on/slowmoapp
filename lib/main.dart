@@ -83,6 +83,7 @@ class _MainPageState extends State<MainPage> {
             var properties =
                 information.getAllProperties()?["streams"][0]["r_frame_rate"];
             print(properties);
+            print(information.getAllProperties());
           } else {
             print("Invalid file");
           }
