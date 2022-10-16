@@ -41,6 +41,8 @@ dependencies:
   permission_handler: ^10.1.0
   material: ^1.0.0+2
   photo_manager: ^2.4.0
+  file_picker: ^5.2.1
+  file: ^6.1.4
 
 dev_dependencies:
   flutter_test:

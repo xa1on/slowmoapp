@@ -1,5 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:photo_manager/photo_manager.dart';
+import 'package:file_picker/file_picker.dart';
+
+//ffmpeg
+import 'package:ffmpeg_kit_flutter/abstract_session.dart';
+import 'package:ffmpeg_kit_flutter/arch_detect.dart';
+import 'package:ffmpeg_kit_flutter/chapter.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit_config.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_session.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_session_complete_callback.dart';
+import 'package:ffmpeg_kit_flutter/ffprobe_kit.dart';
+import 'package:ffmpeg_kit_flutter/ffprobe_session.dart';
+import 'package:ffmpeg_kit_flutter/ffprobe_session_complete_callback.dart';
+import 'package:ffmpeg_kit_flutter/level.dart';
+import 'package:ffmpeg_kit_flutter/log.dart';
+import 'package:ffmpeg_kit_flutter/log_callback.dart';
+import 'package:ffmpeg_kit_flutter/log_redirection_strategy.dart';
+import 'package:ffmpeg_kit_flutter/media_information.dart';
+import 'package:ffmpeg_kit_flutter/media_information_json_parser.dart';
+import 'package:ffmpeg_kit_flutter/media_information_session.dart';
+import 'package:ffmpeg_kit_flutter/media_information_session_complete_callback.dart';
+import 'package:ffmpeg_kit_flutter/packages.dart';
+import 'package:ffmpeg_kit_flutter/return_code.dart';
+import 'package:ffmpeg_kit_flutter/session.dart';
+import 'package:ffmpeg_kit_flutter/session_state.dart';
+import 'package:ffmpeg_kit_flutter/signal.dart';
+import 'package:ffmpeg_kit_flutter/statistics.dart';
+import 'package:ffmpeg_kit_flutter/statistics_callback.dart';
+import 'package:ffmpeg_kit_flutter/stream_information.dart';
 
 void main() {
   runApp(const SlothApp());
@@ -40,12 +68,27 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  void _fetchVideo() async {
-    final PermissionState requestPerms =
-        await PhotoManager.requestPermissionExtend();
-    if (requestPerms.isAuth) {
-      print("Granted");
+  var inputPath;
+  _pickFile() async {
+    FilePickerResult? result =
+        await FilePicker.platform.pickFiles(type: FileType.video);
+    if (result != null) {
+      inputPath = result.files.single.path;
     }
+    FFprobeKit.getMediaInformation(inputPath).then((session) async {
+      final information = await session.getMediaInformation();
+      if (information == null) {
+        final state =
+            FFmpegKitConfig.sessionStateToString(await session.getState());
+        final returnCode = await session.getReturnCode();
+        final failStackTrace = await session.getFailStackTrace();
+        final duration = await session.getDuration();
+        final output = await session.getOutput();
+        print(duration);
+      } else {
+        print("Invalid file");
+      }
+    });
   }
 
   @override
@@ -89,7 +132,7 @@ class _MainPageState extends State<MainPage> {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            _fetchVideo();
+            _pickFile();
           },
           child: const Icon(Icons.add_a_photo_rounded),
         ),
