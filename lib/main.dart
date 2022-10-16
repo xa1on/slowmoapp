@@ -1,7 +1,6 @@
-import 'package:file/file.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 //ffmpeg
 import 'package:ffmpeg_kit_flutter/abstract_session.dart';
@@ -69,8 +68,20 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
+var inputPath;
+Map inputInfo = {};
+var thumbnailBytes;
+
 class _MainPageState extends State<MainPage> {
-  var inputPath;
+  _getThumbnail() async {
+    thumbnailBytes = await VideoThumbnail.thumbnailData(
+      video: inputPath,
+      imageFormat: ImageFormat.JPEG,
+      maxWidth: 128,
+      quality: 25,
+    );
+  }
+
   _pickFile() async {
     FilePickerResult? result =
         await FilePicker.platform.pickFiles(type: FileType.video);
@@ -80,10 +91,16 @@ class _MainPageState extends State<MainPage> {
         (session) async {
           final information = await session.getMediaInformation();
           if (information != null) {
-            var properties =
+            var frameRateString =
                 information.getAllProperties()?["streams"][0]["r_frame_rate"];
-            print(properties);
-            print(information.getAllProperties());
+            var frameRateBuffer = frameRateString.split('/');
+            inputInfo["framerate"] = double.parse(frameRateBuffer[0]) /
+                double.parse(frameRateBuffer[1]);
+            inputInfo["duration"] = information.getDuration();
+            inputInfo["name"] = result.files.single.name;
+            inputInfo["bitrate"] = information.getBitrate();
+            _getThumbnail();
+            setState(() {});
           } else {
             print("Invalid file");
           }
@@ -95,60 +112,61 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          leading: Builder(builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-            );
-          }),
-          title: const Text('Sloth'),
-        ),
-        drawer: Drawer(
-          child: ListView(
-            padding: const EdgeInsets.all(0),
-            children: <Widget>[
-              const DrawerHeader(
-                decoration: BoxDecoration(),
-                margin: EdgeInsets.all(0),
-                padding: EdgeInsets.all(0),
-                child: UserAccountsDrawerHeader(
-                  accountName: Text("Chenghao Li"),
-                  accountEmail: Text("chenghaoli36@gmail.com"),
-                ),
+      appBar: AppBar(
+        leading: Builder(builder: (BuildContext context) {
+          return IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+          );
+        }),
+        title: const Text('Sloth'),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: const EdgeInsets.all(0),
+          children: <Widget>[
+            const DrawerHeader(
+              decoration: BoxDecoration(),
+              margin: EdgeInsets.all(0),
+              padding: EdgeInsets.all(0),
+              child: UserAccountsDrawerHeader(
+                accountName: Text("Chenghao Li"),
+                accountEmail: Text("chenghaoli36@gmail.com"),
               ),
-              ListTile(
-                title: const Text('Home'),
-                onTap: () {},
-              ),
-              ListTile(
-                title: const Text('Settings'),
-                onTap: () {},
-              ),
-            ],
-          ),
+            ),
+            ListTile(
+              title: const Text('Home'),
+              onTap: () {},
+            ),
+            ListTile(
+              title: const Text('Settings'),
+              onTap: () {},
+            ),
+          ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _pickFile();
-          },
-          child: const Icon(Icons.add_a_photo_rounded),
-        ),
-        body: const PageContents());
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _pickFile();
+        },
+        child: const Icon(Icons.add_a_photo_rounded),
+      ),
+      body: inputInfo["framerate"] == null ? EmptyPage() : VideoInfo(),
+    );
   }
 }
 
-class PageContents extends StatefulWidget {
-  const PageContents({super.key});
+class EmptyPage extends StatefulWidget {
+  const EmptyPage({super.key});
 
   @override
-  State<PageContents> createState() => _PageContentsState();
+  State<EmptyPage> createState() => _EmptyPageState();
 }
 
-class _PageContentsState extends State<PageContents> {
+class _EmptyPageState extends State<EmptyPage> {
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -163,6 +181,92 @@ class _PageContentsState extends State<PageContents> {
           Text('Press the Add Video Button to get started!'),
         ],
       ),
+    );
+  }
+}
+
+class VideoInfo extends StatefulWidget {
+  const VideoInfo({super.key});
+
+  @override
+  State<VideoInfo> createState() => _VideoInfoState();
+}
+
+class _VideoInfoState extends State<VideoInfo> {
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Expanded(
+                flex: 2,
+                child: Image.memory(thumbnailBytes),
+              ),
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(5.0, 0.0, 0.0, 0.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        inputInfo["name"],
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14.0,
+                        ),
+                      ),
+                      const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 2.0)),
+                      Text(
+                        inputPath,
+                        style: const TextStyle(fontSize: 10.0),
+                      ),
+                      const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 1.0)),
+                      Text(
+                        (((double.parse(inputInfo["duration"]) * 100).round()) /
+                                    100)
+                                .toString() +
+                            ' seconds',
+                        style: const TextStyle(fontSize: 10.0),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.more_vert,
+                size: 16.0,
+              ),
+            ],
+          ),
+        ),
+        Card(
+          child: ListTile(
+            leading: Icon(Icons.add_a_photo_rounded),
+            title: Text('Video Info'),
+            subtitle: Text('Technical video stuff'),
+          ),
+        ),
+        Card(
+          child: ListTile(
+            title: Text(
+                'Framerate: ' + inputInfo["framerate"].toString() + " FPS"),
+            dense: true,
+          ),
+        ),
+        Card(
+          child: ListTile(
+            title: Text('Bitrate: ' + inputInfo["bitrate"] + " bps"),
+            dense: true,
+          ),
+        ),
+      ],
     );
   }
 }
