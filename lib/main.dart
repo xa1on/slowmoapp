@@ -1,5 +1,7 @@
+import 'package:file/file.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 //ffmpeg
 import 'package:ffmpeg_kit_flutter/abstract_session.dart';
@@ -74,21 +76,19 @@ class _MainPageState extends State<MainPage> {
         await FilePicker.platform.pickFiles(type: FileType.video);
     if (result != null) {
       inputPath = result.files.single.path;
+      FFprobeKit.getMediaInformation(inputPath).then(
+        (session) async {
+          final information = await session.getMediaInformation();
+          if (information != null) {
+            var properties =
+                information.getAllProperties()?["streams"][0]["r_frame_rate"];
+            print(properties);
+          } else {
+            print("Invalid file");
+          }
+        },
+      );
     }
-    FFprobeKit.getMediaInformation(inputPath).then((session) async {
-      final information = await session.getMediaInformation();
-      if (information == null) {
-        final state =
-            FFmpegKitConfig.sessionStateToString(await session.getState());
-        final returnCode = await session.getReturnCode();
-        final failStackTrace = await session.getFailStackTrace();
-        final duration = await session.getDuration();
-        final output = await session.getOutput();
-        print(duration);
-      } else {
-        print("Invalid file");
-      }
-    });
   }
 
   @override
